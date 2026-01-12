@@ -3,6 +3,7 @@ import { useState } from "react";
 const Login = ({ onLogin }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -14,11 +15,11 @@ const Login = ({ onLogin }) => {
 
     const user = {
       email,
-      role: "user",
+      role,
       loginTime: new Date().toLocaleString(),
     };
 
-    onLogin(user); // ✅ VERY IMPORTANT
+    onLogin(user);
   };
 
   return (
@@ -37,6 +38,13 @@ const Login = ({ onLogin }) => {
         placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
+      />
+
+      <input
+      type="text"
+      placeholder="Role"
+      value={role}
+      onChange={(e) => setRole(e.target.value)}
       />
 
       <button type="submit">Login</button>
