@@ -4,7 +4,6 @@ const Dashboard = ({ user, onLogout }) => {
       <h1>Dashboard</h1>
 
       <p><strong>Email:</strong> {user.email}</p>
-      <p><strong>Role:</strong> {user.role}</p>
 
       <button onClick={onLogout}>Logout</button>
     </div>

@@ -40,13 +40,6 @@ const Login = ({ onLogin }) => {
         onChange={(e) => setPassword(e.target.value)}
       />
 
-      <input
-      type="text"
-      placeholder="Role"
-      value={role}
-      onChange={(e) => setRole(e.target.value)}
-      />
-
       <button type="submit">Login</button>
     </form>
   );
