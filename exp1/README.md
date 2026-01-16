@@ -1,55 +1,68 @@
-# exp1-improved - Learning Guide
+# E-Commerce Application with Redux
 
-## Key Improvements Over Original
+## Project Overview
+A React-based e-commerce application demonstrating state management using Redux Toolkit. The application features role-based access control, shopping cart functionality, and theme customization.
 
-### 1. **productsSlice.jsx**
-- ✅ Added initial products with sample data
-- ✅ Added `price` field to products
-- **Why?** Users can see and interact with products immediately without needing to add them first
+## Features
 
-### 2. **cartSlice.jsx**
-- ✅ Quantity tracking - prevents duplicate items
-- ✅ `addToCart` checks if item exists and increments quantity
-- ✅ `removeFromCart` action to remove items
-- ✅ `updateQuantity` action to change item quantities
-- **Why?** Better shopping cart UX - users can manage quantities and remove items
+### User Features
+- Browse products with prices
+- Add items to cart
+- Adjust item quantities in cart
+- Remove items from cart
+- View cart total
+- Toggle between light and dark themes
 
-### 3. **cart.jsx**
-- ✅ Shows quantity for each item
-- ✅ +/- buttons to adjust quantity
-- ✅ Remove button for each item
-- ✅ Calculates and displays total price
-- ✅ Shows "Cart is empty" message when no items
-- **Why?** Full cart management functionality
+### Admin Features
+- Add new products with name and price
+- Edit existing products
+- Delete products
+- All user features
 
-### 4. **Products.jsx**
-- ✅ Added price input field for admin
-- ✅ Displays price for each product
-- ✅ Added labels for accessibility
-- **Why?** Products need pricing, better form accessibility
+## Technology Stack
+- React 19.2.0
+- Redux Toolkit 2.11.2
+- Vite 7.2.4
+- React-Redux 9.2.0
 
-### 5. **login.jsx**
-- ✅ Added proper `<label>` elements with `htmlFor` attributes
-- ✅ Added `id` attributes to inputs
-- **Why?** Better accessibility and UX
-
-### 6. **index.css**
-- ✅ Added styling for inputs, selects, and labels
-- ✅ Added margin to buttons for spacing
-- **Why?** Better visual appearance
-
-## How to Run
+## Installation
 
 ```bash
-cd exp1-improved
 npm install
+```
+
+## Running the Application
+
+```bash
 npm run dev
 ```
 
-## What You Learned
+## Project Structure
 
-1. **State Management**: How to handle complex state (quantities, duplicates)
-2. **Redux Best Practices**: Multiple actions in one slice
-3. **Accessibility**: Proper form labels and IDs
-4. **UX Improvements**: Empty states, totals, quantity management
-5. **Data Modeling**: Adding necessary fields (price) to entities
+```
+src/
+├── components/
+│   ├── login.jsx          # Login component with role selection
+│   ├── Products.jsx       # Product listing and management
+│   └── cart.jsx           # Shopping cart with quantity controls
+├── store/
+│   ├── store.js           # Redux store configuration
+│   ├── productsSlice.jsx  # Products state management
+│   └── cartSlice.jsx      # Cart state management
+├── App.jsx                # Main application component
+├── main.jsx               # Application entry point
+└── index.css              # Global styles and theme
+```
+
+## Usage
+
+1. Login with any email and password
+2. Select role (User or Admin)
+3. Browse and add products to cart
+4. Manage cart quantities
+5. Toggle theme using switch in top-right corner
+
+## Default Products
+- Laptop - ₹49,999
+- Phone - ₹15,999
+- Headphones - ₹1,999
