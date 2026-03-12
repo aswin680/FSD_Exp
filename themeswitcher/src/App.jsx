@@ -10,7 +10,8 @@ function App() {
   const pageStyle = {
     backgroundColor: darkMode ? "#222" : "#ffffff",
     color: darkMode ? "#ffffff" : "#000000",
-    height: "100vh",
+    width : "100%",
+    height: "97vh",
     display: "flex",
     flexDirection: "column",
     alignItems: "center",

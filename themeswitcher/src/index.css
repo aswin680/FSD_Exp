@@ -30,6 +30,16 @@ body {
   min-height: 100vh;
 }
 
+/* Theme classes applied to <body> by App.jsx */
+body.dark-mode {
+  background-color: #222 !important;
+  color: #ffffff !important;
+}
+body.light-mode {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
