@@ -1,0 +1,15 @@
+name = "exp1-improved"
+compatibility_date = "2026-01-20"
+# Replace with your Cloudflare Account ID (find in Cloudflare dashboard)
+account_id = "YOUR_ACCOUNT_ID"
+# If you want a workers.dev subdomain set workers_dev = true
+workers_dev = true
+# Optional: route and zone_id if deploying to a custom domain
+route = ""
+zone_id = ""
+
+# Deploy the built output in ./dist as a Workers Site
+site = { bucket = "./dist", include = ["**/*"] }
+
+# Optional: build command - Wrangler will not run build by default for simple sites
+# You can run `npm run build` before `wrangler publish` or integrate here with a CI

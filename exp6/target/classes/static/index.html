@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>JPA & Hibernate Demo — FSD II Exp 6</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3250;
+      --accent: #6c63ff;
+      --accent2: #00d4aa;
+      --accent3: #ff6b6b;
+      --accent4: #ffd93d;
+      --text: #e8eaf6;
+      --muted: #8b90b8;
+      --radius: 14px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, #1a1d27 0%, #12152a 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 65px; position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(10px);
+    }
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .logo h1 { font-size: 1.1rem; font-weight: 700; }
+    .logo span { font-size: 0.75rem; color: var(--muted); display: block; font-weight: 400; }
+    .status { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--accent2); }
+    .dot { width: 8px; height: 8px; background: var(--accent2); border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.3)} }
+
+    /* Layout */
+    .layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 65px); }
+
+    /* Sidebar */
+    nav { background: var(--surface); border-right: 1px solid var(--border); padding: 1.5rem 1rem; }
+    .nav-title { font-size: 0.7rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; padding: 0 0.5rem; margin-bottom: 0.5rem; margin-top: 1.2rem; }
+    .nav-title:first-child { margin-top: 0; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px; padding: 0.6rem 0.75rem;
+      border-radius: 10px; cursor: pointer; transition: all 0.2s; font-size: 0.875rem;
+      color: var(--muted); margin-bottom: 2px;
+    }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: linear-gradient(135deg, rgba(108,99,255,0.2), rgba(0,212,170,0.1)); color: var(--accent); border: 1px solid rgba(108,99,255,0.3); }
+    .nav-item .icon { font-size: 1rem; width: 20px; text-align: center; }
+
+    /* Main */
+    main { padding: 2rem; overflow-y: auto; }
+    .page { display: none; animation: fadeIn 0.3s ease; }
+    .page.active { display: block; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+    /* Page Header */
+    .page-header { margin-bottom: 2rem; }
+    .page-header h2 { font-size: 1.6rem; font-weight: 800; }
+    .page-header p { color: var(--muted); font-size: 0.875rem; margin-top: 4px; }
+    .badge { display: inline-block; background: rgba(108,99,255,0.15); color: var(--accent); border: 1px solid rgba(108,99,255,0.3); border-radius: 20px; padding: 2px 10px; font-size: 0.7rem; font-weight: 600; margin-left: 10px; vertical-align: middle; }
+
+    /* Stats Grid */
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 1.25rem; display: flex; align-items: center; gap: 1rem; transition: transform 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; }
+    .stat-val { font-size: 1.8rem; font-weight: 800; line-height: 1; }
+    .stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 3px; }
+
+    /* Filters */
+    .filter-bar {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: flex-end;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 4px; }
+    .filter-group label { font-size: 0.7rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .filter-group input, .filter-group select {
+      background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+      border-radius: 8px; padding: 0.5rem 0.75rem; font-size: 0.85rem; font-family: inherit;
+      outline: none; transition: border-color 0.2s; min-width: 120px;
+    }
+    .filter-group input:focus, .filter-group select:focus { border-color: var(--accent); }
+    .filter-group select option { background: var(--surface2); }
+    .btn {
+      padding: 0.55rem 1.25rem; border-radius: 8px; border: none; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; font-family: inherit; transition: all 0.2s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #5a50f0; transform: translateY(-1px); }
+    .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-outline { background: transparent; color: var(--accent2); border: 1px solid var(--accent2); }
+    .btn-outline:hover { background: rgba(0,212,170,0.1); }
+
+    /* Table */
+    .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: var(--surface2); }
+    th { padding: 0.85rem 1rem; text-align: left; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); }
+    td { padding: 0.85rem 1rem; font-size: 0.875rem; border-top: 1px solid var(--border); }
+    tr:hover td { background: rgba(108,99,255,0.04); }
+    .loading td { text-align: center; padding: 3rem; color: var(--muted); }
+
+    /* Tags / Badges */
+    .tag { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; margin: 2px; }
+    .tag-admin { background: rgba(255,107,107,0.15); color: #ff6b6b; border: 1px solid rgba(255,107,107,0.3); }
+    .tag-user { background: rgba(108,99,255,0.15); color: var(--accent); border: 1px solid rgba(108,99,255,0.3); }
+    .tag-moderator { background: rgba(255,217,61,0.15); color: var(--accent4); border: 1px solid rgba(255,217,61,0.3); }
+    .tag-cat { background: rgba(0,212,170,0.12); color: var(--accent2); border: 1px solid rgba(0,212,170,0.3); }
+
+    /* Price */
+    .price { font-weight: 700; color: var(--accent2); }
+    .stock-low { color: var(--accent3); font-weight: 600; }
+    .stock-ok { color: var(--accent2); }
+
+    /* Pagination */
+    .pagination { display: flex; align-items: center; gap: 8px; margin-top: 1rem; justify-content: center; }
+    .page-btn { padding: 0.4rem 0.85rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
+    .page-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .page-btn.current { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .page-info { font-size: 0.8rem; color: var(--muted); }
+
+    /* SQL Panel */
+    .sql-panel { background: #0d1117; border: 1px solid var(--border); border-radius: var(--radius); margin-top: 1rem; overflow: hidden; }
+    .sql-header { padding: 0.6rem 1rem; background: var(--surface2); font-size: 0.75rem; font-weight: 600; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+    .sql-body { padding: 1rem; font-family: 'Courier New', monospace; font-size: 0.8rem; color: #79b8ff; white-space: pre-wrap; max-height: 150px; overflow-y: auto; }
+    .sql-kw { color: #ff79c6; font-weight: 700; }
+    .sql-tbl { color: #50fa7b; }
+    .sql-op { color: #ffb86c; }
+
+    /* Charts bar */
+    .bar-chart { margin-top: 1rem; }
+    .bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .bar-label { width: 120px; font-size: 0.8rem; color: var(--muted); text-align: right; flex-shrink: 0; }
+    .bar-track { flex: 1; background: var(--surface2); border-radius: 4px; height: 24px; overflow: hidden; position: relative; }
+    .bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 0.75rem; font-weight: 700; color: #fff; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
+    .bar-val { font-size: 0.8rem; color: var(--text); font-weight: 600; width: 70px; }
+
+    /* Cards grid */
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 1.25rem; transition: all 0.2s;
+    }
+    .card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 30px rgba(108,99,255,0.15); }
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; }
+    .card-title { font-weight: 700; font-size: 0.95rem; }
+    .card-sub { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+    .card-price { font-size: 1.4rem; font-weight: 800; color: var(--accent2); }
+
+    /* Empty state */
+    .empty { text-align: center; padding: 3rem; color: var(--muted); }
+    .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--surface); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🗄️</div>
+    <div>
+      <h1>JPA & Hibernate Demo</h1>
+      <span>FSD II — Experiment 6</span>
+    </div>
+  </div>
+  <div class="status"><div class="dot"></div> Connected to H2 · localhost:8082</div>
+</header>
+
+<div class="layout">
+  <nav>
+    <div class="nav-title">Overview</div>
+    <div class="nav-item active" onclick="showPage('dashboard', this)"><span class="icon">📊</span> Dashboard</div>
+
+    <div class="nav-title">Part A — Entities</div>
+    <div class="nav-item" onclick="showPage('products', this)"><span class="icon">📦</span> Products</div>
+    <div class="nav-item" onclick="showPage('categories', this)"><span class="icon">🗂️</span> Categories</div>
+
+    <div class="nav-title">Part B — Relations</div>
+    <div class="nav-item" onclick="showPage('users', this)"><span class="icon">👤</span> Users + Roles</div>
+    <div class="nav-item" onclick="showPage('onetomany', this)"><span class="icon">🔗</span> One-to-Many</div>
+
+    <div class="nav-title">Part C — Queries</div>
+    <div class="nav-item" onclick="showPage('pricefilter', this)"><span class="icon">💰</span> Price Filter (JPQL)</div>
+    <div class="nav-item" onclick="showPage('criteria', this)"><span class="icon">⚙️</span> Criteria API</div>
+    <div class="nav-item" onclick="showPage('analytics', this)"><span class="icon">📈</span> Analytics</div>
+  </nav>
+
+  <main>
+
+    <!-- DASHBOARD -->
+    <div id="page-dashboard" class="page active">
+      <div class="page-header">
+        <h2>Dashboard <span class="badge">Live</span></h2>
+        <p>Overview of all entities and relationships in the database</p>
+      </div>
+      <div class="stats" id="stats-grid">
+        <div class="stat-card"><div class="stat-icon" style="background:rgba(108,99,255,0.15)">📦</div><div><div class="stat-val" id="stat-products">—</div><div class="stat-label">Products</div></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:rgba(0,212,170,0.15)">🗂️</div><div><div class="stat-val" id="stat-categories">—</div><div class="stat-label">Categories</div></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:rgba(255,107,107,0.15)">👤</div><div><div class="stat-val" id="stat-users">—</div><div class="stat-label">Users</div></div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:rgba(255,217,61,0.15)">🔑</div><div><div class="stat-val" id="stat-roles">—</div><div class="stat-label">Role Assignments</div></div></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        <div>
+          <div class="page-header"><h2 style="font-size:1rem">📊 Avg Price by Category</h2></div>
+          <div class="table-wrap"><div class="bar-chart" id="avg-chart" style="padding:1rem"></div></div>
+        </div>
+        <div>
+          <div class="page-header"><h2 style="font-size:1rem">🔑 Users per Role</h2></div>
+          <div class="table-wrap"><div class="bar-chart" id="role-chart" style="padding:1rem"></div></div>
+        </div>
+      </div>
+
+      <div style="margin-top:1.5rem">
+        <div class="page-header"><h2 style="font-size:1rem">🗃️ Recent Products</h2></div>
+        <div class="table-wrap">
+          <table id="dash-table">
+            <thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Stock</th></tr></thead>
+            <tbody><tr class="loading"><td colspan="4">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div id="page-products" class="page">
+      <div class="page-header"><h2>Products <span class="badge">Part A</span></h2><p>All products — basic JPA entity with @Entity, @Id, @GeneratedValue</p></div>
+      <div class="filter-bar">
+        <div class="filter-group"><label>Search</label><input id="prod-search" type="text" placeholder="Keyword..." oninput="filterProducts()"/></div>
+        <div class="filter-group"><label>View</label>
+          <select id="prod-view" onchange="filterProducts()">
+            <option value="table">Table View</option>
+            <option value="card">Card View</option>
+          </select>
+        </div>
+        <button class="btn btn-secondary" onclick="loadProducts()">↺ Refresh</button>
+      </div>
+      <div id="prod-table-wrap" class="table-wrap">
+        <table><thead><tr><th>#</th><th>Name</th><th>Description</th><th>Category</th><th>Price</th><th>Stock</th></tr></thead>
+        <tbody id="prod-tbody"><tr class="loading"><td colspan="6">Loading...</td></tr></tbody></table>
+      </div>
+      <div id="prod-cards" class="cards" style="display:none"></div>
+    </div>
+
+    <!-- CATEGORIES -->
+    <div id="page-categories" class="page">
+      <div class="page-header"><h2>Categories <span class="badge">Part A</span></h2><p>Category entities — parent side of One-to-Many with Product</p></div>
+      <div class="table-wrap">
+        <table><thead><tr><th>#</th><th>Name</th><th>Description</th><th>Products</th></tr></thead>
+        <tbody id="cat-tbody"><tr class="loading"><td colspan="4">Loading...</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div id="page-users" class="page">
+      <div class="page-header"><h2>Users + Roles <span class="badge">Part B · Many-to-Many</span></h2><p>@ManyToMany — users join table with roles via user_roles</p></div>
+      <div class="filter-bar">
+        <div class="filter-group"><label>Filter by Role</label>
+          <select id="role-filter" onchange="filterUsers()">
+            <option value="">All Roles</option>
+            <option value="ADMIN">ADMIN</option>
+            <option value="USER">USER</option>
+            <option value="MODERATOR">MODERATOR</option>
+          </select>
+        </div>
+        <button class="btn btn-secondary" onclick="loadUsers()">↺ Refresh</button>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>#</th><th>Username</th><th>Email</th><th>Roles</th></tr></thead>
+        <tbody id="user-tbody"><tr class="loading"><td colspan="4">Loading...</td></tr></tbody></table>
+      </div>
+      <div class="sql-panel">
+        <div class="sql-header">🔍 Generated JPQL → SQL (Many-to-Many traversal)</div>
+        <div class="sql-body" id="user-sql">SELECT u FROM User u JOIN u.roles r WHERE r.name = :roleName</div>
+      </div>
+    </div>
+
+    <!-- ONE TO MANY -->
+    <div id="page-onetomany" class="page">
+      <div class="page-header"><h2>One-to-Many <span class="badge">Part B</span></h2><p>Category → Products · @OneToMany(mappedBy="category") + @ManyToOne + @JoinColumn(category_id)</p></div>
+      <div class="filter-bar">
+        <div class="filter-group"><label>Select Category</label>
+          <select id="cat-select" onchange="loadCategoryProducts()">
+            <option value="">— Choose —</option>
+            <option value="Electronics">Electronics</option>
+            <option value="Clothing">Clothing</option>
+            <option value="Books">Books</option>
+            <option value="Sports">Sports</option>
+            <option value="Home">Home</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>#</th><th>Product Name</th><th>Price</th><th>Stock</th></tr></thead>
+        <tbody id="o2m-tbody"><tr class="loading"><td colspan="4">Select a category above</td></tr></tbody></table>
+      </div>
+      <div class="sql-panel">
+        <div class="sql-header">🔍 Generated SQL — JOIN via foreign key category_id</div>
+        <div class="sql-body">SELECT p.* FROM products p
+JOIN categories c ON p.category_id = c.id
+WHERE c.name = ?</div>
+      </div>
+    </div>
+
+    <!-- PRICE FILTER -->
+    <div id="page-pricefilter" class="page">
+      <div class="page-header"><h2>Price Range Filter <span class="badge">Part C · JPQL</span></h2><p>Custom @Query with BETWEEN, pagination and sorting</p></div>
+      <div class="filter-bar">
+        <div class="filter-group"><label>Min Price (₹)</label><input id="min-price" type="number" value="0" min="0" style="width:100px"/></div>
+        <div class="filter-group"><label>Max Price (₹)</label><input id="max-price" type="number" value="999" min="0" style="width:100px"/></div>
+        <div class="filter-group"><label>Sort By</label>
+          <select id="sort-by">
+            <option value="price">Price</option>
+            <option value="name">Name</option>
+            <option value="stock">Stock</option>
+          </select>
+        </div>
+        <div class="filter-group"><label>Page Size</label>
+          <select id="page-size">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="15">15</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="runPriceFilter()">🔍 Run Query</button>
+      </div>
+      <div class="sql-panel" style="margin-bottom:1rem">
+        <div class="sql-header">📝 JPQL Query</div>
+        <div class="sql-body" id="jpql-display">SELECT p FROM Product p WHERE p.price BETWEEN :min AND :max ORDER BY p.price ASC</div>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>#</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th></tr></thead>
+        <tbody id="price-tbody"><tr class="loading"><td colspan="5">Run query to see results</td></tr></tbody></table>
+      </div>
+      <div class="pagination" id="price-pagination"></div>
+    </div>
+
+    <!-- CRITERIA API -->
+    <div id="page-criteria" class="page">
+      <div class="page-header"><h2>Criteria API <span class="badge">Part C · Dynamic</span></h2><p>EntityManager + CriteriaBuilder — predicates built dynamically at runtime</p></div>
+      <div class="filter-bar">
+        <div class="filter-group"><label>Min Price</label><input id="c-min" type="number" placeholder="e.g. 50" style="width:100px"/></div>
+        <div class="filter-group"><label>Max Price</label><input id="c-max" type="number" placeholder="e.g. 300" style="width:100px"/></div>
+        <div class="filter-group"><label>Category</label>
+          <select id="c-cat">
+            <option value="">Any</option>
+            <option>Electronics</option><option>Clothing</option><option>Books</option><option>Sports</option><option>Home</option>
+          </select>
+        </div>
+        <div class="filter-group"><label>Keyword</label><input id="c-kw" type="text" placeholder="search name..." style="width:120px"/></div>
+        <div class="filter-group"><label>Sort</label>
+          <select id="c-sort"><option value="price">Price ↑</option><option value="price-desc">Price ↓</option><option value="name">Name</option><option value="stock">Stock</option></select>
+        </div>
+        <button class="btn btn-primary" onclick="runCriteria()">⚙️ Execute</button>
+        <button class="btn btn-secondary" onclick="clearCriteria()">✕ Clear</button>
+      </div>
+      <div class="sql-panel" style="margin-bottom:1rem">
+        <div class="sql-header">🔧 Criteria API — Dynamic SQL Generated</div>
+        <div class="sql-body" id="criteria-sql">Fill in filters and click Execute to see the generated SQL</div>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>#</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th></tr></thead>
+        <tbody id="criteria-tbody"><tr class="loading"><td colspan="5">Select filters and execute</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div id="page-analytics" class="page">
+      <div class="page-header"><h2>Analytics <span class="badge">Part C · Aggregation</span></h2><p>JPQL GROUP BY queries — average price per category, users per role</p></div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+        <div>
+          <h3 style="font-size:0.95rem;margin-bottom:1rem;color:var(--muted)">AVG Price per Category</h3>
+          <div class="table-wrap">
+            <table><thead><tr><th>Category</th><th>Avg Price</th><th>Bar</th></tr></thead>
+            <tbody id="avg-tbody"><tr class="loading"><td colspan="3">Loading...</td></tr></tbody></table>
+          </div>
+          <div class="sql-panel" style="margin-top:1rem">
+            <div class="sql-header">📝 JPQL</div>
+            <div class="sql-body">SELECT p.category.name, AVG(p.price)
+FROM Product p
+GROUP BY p.category.name
+ORDER BY AVG(p.price) DESC</div>
+          </div>
+        </div>
+        <div>
+          <h3 style="font-size:0.95rem;margin-bottom:1rem;color:var(--muted)">Users per Role</h3>
+          <div class="table-wrap">
+            <table><thead><tr><th>Role</th><th>Users</th><th>Bar</th></tr></thead>
+            <tbody id="role-agg-tbody"><tr class="loading"><td colspan="3">Loading...</td></tr></tbody></table>
+          </div>
+          <div class="sql-panel" style="margin-top:1rem">
+            <div class="sql-header">📝 JPQL</div>
+            <div class="sql-body">SELECT r.name, COUNT(u)
+FROM User u JOIN u.roles r
+GROUP BY r.name</div>
+          </div>
+
+          <h3 style="font-size:0.95rem;margin:1.5rem 0 1rem;color:var(--muted)">Low Stock Alert</h3>
+          <div class="filter-bar" style="margin-bottom:0.75rem">
+            <div class="filter-group"><label>Threshold</label><input id="ls-thresh" type="number" value="50" style="width:80px"/></div>
+            <button class="btn btn-outline" onclick="loadLowStock()">Check</button>
+          </div>
+          <div class="table-wrap">
+            <table><thead><tr><th>Product</th><th>Category</th><th>Stock</th></tr></thead>
+            <tbody id="ls-tbody"><tr class="loading"><td colspan="3">Click Check</td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const BASE = '';
+
+// Nav
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  el.classList.add('active');
+  if (id === 'dashboard') loadDashboard();
+  if (id === 'products') loadProducts();
+  if (id === 'categories') loadCategories();
+  if (id === 'users') loadUsers();
+  if (id === 'analytics') loadAnalytics();
+}
+
+async function fetchJSON(url) {
+  const r = await fetch(BASE + url);
+  return r.json();
+}
+
+// DASHBOARD
+async function loadDashboard() {
+  const [products, avgPrice, roleCounts] = await Promise.all([
+    fetchJSON('/api/products'),
+    fetchJSON('/api/products/stats/avg-price'),
+    fetchJSON('/api/users/stats/role-counts')
+  ]);
+  document.getElementById('stat-products').textContent = products.length;
+  const cats = [...new Set(products.map(p => p.categoryName))];
+  document.getElementById('stat-categories').textContent = cats.length;
+  document.getElementById('stat-users').textContent = Object.values(roleCounts).reduce((a,b)=>a+b,0);
+  document.getElementById('stat-roles').textContent = Object.values(roleCounts).reduce((a,b)=>a+b,0);
+
+  // avg chart
+  const maxAvg = Math.max(...avgPrice.map(r=>r.avgPrice));
+  const colors = ['#6c63ff','#00d4aa','#ff6b6b','#ffd93d','#a855f7'];
+  document.getElementById('avg-chart').innerHTML = avgPrice.map((r,i)=>`
+    <div class="bar-row">
+      <div class="bar-label">${r.category}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(r.avgPrice/maxAvg*100).toFixed(0)}%;background:${colors[i%colors.length]}">$${Number(r.avgPrice).toFixed(0)}</div></div>
+    </div>`).join('');
+
+  // role chart
+  const maxRole = Math.max(...Object.values(roleCounts));
+  document.getElementById('role-chart').innerHTML = Object.entries(roleCounts).map(([role,cnt],i)=>`
+    <div class="bar-row">
+      <div class="bar-label">${role}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(cnt/maxRole*100).toFixed(0)}%;background:${colors[i%colors.length]}">${cnt} users</div></div>
+    </div>`).join('');
+
+  // recent
+  const recent = products.slice(0, 8);
+  document.querySelector('#dash-table tbody').innerHTML = recent.map(p=>`
+    <tr><td><strong>${p.name}</strong></td><td><span class="tag tag-cat">${p.categoryName||'—'}</span></td>
+    <td class="price">$${p.price}</td><td class="${p.stock<50?'stock-low':'stock-ok'}">${p.stock}</td></tr>`).join('');
+}
+
+// PRODUCTS
+let allProducts = [];
+async function loadProducts() {
+  allProducts = await fetchJSON('/api/products');
+  renderProducts(allProducts);
+}
+function filterProducts() {
+  const kw = document.getElementById('prod-search').value.toLowerCase();
+  renderProducts(allProducts.filter(p => p.name.toLowerCase().includes(kw) || (p.categoryName||'').toLowerCase().includes(kw)));
+}
+function renderProducts(products) {
+  const view = document.getElementById('prod-view').value;
+  document.getElementById('prod-table-wrap').style.display = view==='table'?'block':'none';
+  document.getElementById('prod-cards').style.display = view==='card'?'grid':'none';
+  if (view==='table') {
+    document.getElementById('prod-tbody').innerHTML = products.map((p,i)=>`
+      <tr><td>${p.id}</td><td><strong>${p.name}</strong></td>
+      <td style="color:var(--muted);font-size:.8rem">${(p.description||'').slice(0,60)}...</td>
+      <td><span class="tag tag-cat">${p.categoryName||'—'}</span></td>
+      <td class="price">$${p.price}</td>
+      <td class="${p.stock<50?'stock-low':'stock-ok'}">${p.stock} ${p.stock<50?'⚠':'✓'}</td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">No results</td></tr>';
+  } else {
+    document.getElementById('prod-cards').innerHTML = products.map(p=>`
+      <div class="card"><div class="card-header">
+        <div><div class="card-title">${p.name}</div><div class="card-sub">${(p.description||'').slice(0,60)}...</div></div>
+        <span class="tag tag-cat">${p.categoryName||'—'}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.75rem">
+        <div class="card-price">$${p.price}</div>
+        <div class="${p.stock<50?'stock-low':'stock-ok'}" style="font-size:.85rem">Stock: ${p.stock}</div>
+      </div></div>`).join('') || '<div class="empty"><div class="empty-icon">🔍</div>No results</div>';
+  }
+}
+
+// CATEGORIES
+async function loadCategories() {
+  const products = await fetchJSON('/api/products');
+  const catMap = {};
+  products.forEach(p => { if(p.categoryName) { catMap[p.categoryName] = (catMap[p.categoryName]||0)+1; } });
+  const cats = Object.entries(catMap);
+  document.getElementById('cat-tbody').innerHTML = cats.map(([name, count], i)=>`
+    <tr><td>${i+1}</td><td><strong>${name}</strong></td>
+    <td style="color:var(--muted);font-size:.85rem">Category ${i+1}</td>
+    <td><span class="tag tag-cat">${count} products</span></td></tr>`).join('');
+}
+
+// USERS
+let allUsers = [];
+async function loadUsers() {
+  allUsers = await fetchJSON('/api/users');
+  renderUsers(allUsers);
+}
+function filterUsers() {
+  const role = document.getElementById('role-filter').value;
+  if (!role) { renderUsers(allUsers); return; }
+  fetch('/api/users/by-role?role=' + role).then(r=>r.json()).then(renderUsers);
+  document.getElementById('user-sql').textContent =
+    `SELECT DISTINCT u FROM User u JOIN u.roles r WHERE r.name = '${role}'`;
+}
+function renderUsers(users) {
+  document.getElementById('user-tbody').innerHTML = (users||[]).map((u,i)=>`
+    <tr><td>${u.id}</td><td><strong>${u.username}</strong></td><td style="color:var(--muted)">${u.email}</td>
+    <td>${(u.roles||[]).map(r=>`<span class="tag tag-${r.name.toLowerCase()}">${r.name}</span>`).join('')}</td></tr>`
+  ).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:2rem">No users found</td></tr>';
+}
+
+// ONE TO MANY
+async function loadCategoryProducts() {
+  const cat = document.getElementById('cat-select').value;
+  if (!cat) return;
+  const data = await fetchJSON('/api/products/category/' + cat);
+  document.getElementById('o2m-tbody').innerHTML = data.map((p,i)=>`
+    <tr><td>${i+1}</td><td><strong>${p.name}</strong></td>
+    <td class="price">$${p.price}</td>
+    <td class="${p.stock<50?'stock-low':'stock-ok'}">${p.stock}</td></tr>`).join('') ||
+    '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:2rem">No products</td></tr>';
+}
+
+// PRICE FILTER
+let pricePage = 0;
+async function runPriceFilter(page=0) {
+  pricePage = page;
+  const min = document.getElementById('min-price').value || 0;
+  const max = document.getElementById('max-price').value || 9999;
+  const sort = document.getElementById('sort-by').value;
+  const size = document.getElementById('page-size').value;
+  document.getElementById('jpql-display').textContent =
+    `SELECT p FROM Product p WHERE p.price BETWEEN ${min} AND ${max} ORDER BY p.${sort} ASC`;
+  const data = await fetchJSON(`/api/products/price-range?minPrice=${min}&maxPrice=${max}&page=${page}&size=${size}&sortBy=${sort}`);
+  const items = data.content || [];
+  document.getElementById('price-tbody').innerHTML = items.map((p,i)=>`
+    <tr><td>${page*size+i+1}</td><td><strong>${p.name}</strong></td>
+    <td><span class="tag tag-cat">${p.categoryName||'—'}</span></td>
+    <td class="price">$${p.price}</td><td class="${p.stock<50?'stock-low':'stock-ok'}">${p.stock}</td></tr>`
+  ).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem">No results</td></tr>';
+
+  const totalPages = data.totalPages || 0;
+  let pag = '';
+  if (pricePage > 0) pag += `<button class="page-btn" onclick="runPriceFilter(${pricePage-1})">← Prev</button>`;
+  pag += `<span class="page-info">Page ${pricePage+1} of ${totalPages} · ${data.totalElements||0} total</span>`;
+  if (pricePage < totalPages-1) pag += `<button class="page-btn" onclick="runPriceFilter(${pricePage+1})">Next →</button>`;
+  document.getElementById('price-pagination').innerHTML = pag;
+}
+
+// CRITERIA API
+async function runCriteria() {
+  const min = document.getElementById('c-min').value;
+  const max = document.getElementById('c-max').value;
+  const cat = document.getElementById('c-cat').value;
+  const kw = document.getElementById('c-kw').value;
+  const sortRaw = document.getElementById('c-sort').value;
+  const sortBy = sortRaw.replace('-desc','');
+  const sortDir = sortRaw.includes('desc') ? 'desc' : 'asc';
+
+  let params = `sortBy=${sortBy}&sortDir=${sortDir}&page=0&size=15`;
+  if (min) params += `&minPrice=${min}`;
+  if (max) params += `&maxPrice=${max}`;
+  if (cat) params += `&category=${cat}`;
+  if (kw) params += `&keyword=${kw}`;
+
+  let sql = 'SELECT p.* FROM products p\nLEFT JOIN categories c ON c.id = p.category_id\nWHERE 1=1';
+  if (min) sql += `\n  AND p.price >= ${min}`;
+  if (max) sql += `\n  AND p.price <= ${max}`;
+  if (cat) sql += `\n  AND LOWER(c.name) = '${cat.toLowerCase()}'`;
+  if (kw) sql += `\n  AND (LOWER(p.name) LIKE '%${kw.toLowerCase()}%'\n       OR LOWER(p.description) LIKE '%${kw.toLowerCase()}%')`;
+  sql += `\nORDER BY p.${sortBy} ${sortDir.toUpperCase()}\nLIMIT 15 OFFSET 0`;
+  document.getElementById('criteria-sql').textContent = sql;
+
+  const data = await fetchJSON('/api/products/criteria?' + params);
+  const items = data.content || [];
+  document.getElementById('criteria-tbody').innerHTML = items.map((p,i)=>`
+    <tr><td>${i+1}</td><td><strong>${p.name}</strong></td>
+    <td><span class="tag tag-cat">${p.categoryName||'—'}</span></td>
+    <td class="price">$${p.price}</td><td class="${p.stock<50?'stock-low':'stock-ok'}">${p.stock}</td></tr>`
+  ).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem">No results for these filters</td></tr>';
+}
+function clearCriteria() {
+  ['c-min','c-max','c-kw'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('c-cat').value='';
+  document.getElementById('c-sort').value='price';
+  document.getElementById('criteria-sql').textContent = 'Fill in filters and click Execute to see the generated SQL';
+  document.getElementById('criteria-tbody').innerHTML = '<tr class="loading"><td colspan="5">Select filters and execute</td></tr>';
+}
+
+// ANALYTICS
+async function loadAnalytics() {
+  const [avgPrice, roleCounts] = await Promise.all([
+    fetchJSON('/api/products/stats/avg-price'),
+    fetchJSON('/api/users/stats/role-counts')
+  ]);
+  const maxAvg = Math.max(...avgPrice.map(r=>r.avgPrice));
+  const colors = ['#6c63ff','#00d4aa','#ff6b6b','#ffd93d','#a855f7'];
+  document.getElementById('avg-tbody').innerHTML = avgPrice.map((r,i)=>`
+    <tr><td><strong>${r.category}</strong></td><td class="price">$${Number(r.avgPrice).toFixed(2)}</td>
+    <td style="width:150px"><div class="bar-track" style="height:16px"><div class="bar-fill" style="width:${(r.avgPrice/maxAvg*100).toFixed(0)}%;background:${colors[i%colors.length]};font-size:.65rem"></div></div></td></tr>`).join('');
+
+  const maxRole = Math.max(...Object.values(roleCounts));
+  document.getElementById('role-agg-tbody').innerHTML = Object.entries(roleCounts).map(([role,cnt],i)=>`
+    <tr><td><span class="tag tag-${role.toLowerCase()}">${role}</span></td><td><strong>${cnt}</strong></td>
+    <td style="width:120px"><div class="bar-track" style="height:16px"><div class="bar-fill" style="width:${(cnt/maxRole*100).toFixed(0)}%;background:${colors[i%colors.length]};font-size:.65rem">${cnt}</div></div></td></tr>`).join('');
+}
+async function loadLowStock() {
+  const t = document.getElementById('ls-thresh').value || 50;
+  const data = await fetchJSON('/api/products/stats/low-stock?threshold=' + t);
+  document.getElementById('ls-tbody').innerHTML = data.map(p=>`
+    <tr><td><strong>${p.name}</strong></td>
+    <td><span class="tag tag-cat">${p.categoryName||'—'}</span></td>
+    <td class="stock-low">⚠ ${p.stock}</td></tr>`).join('') ||
+    `<tr><td colspan="3" style="text-align:center;color:var(--accent2);padding:1.5rem">✓ All products have stock above ${t}</td></tr>`;
+}
+
+// Init
+loadDashboard();
+</script>
+</body>
+</html>
