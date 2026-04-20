@@ -5,6 +5,7 @@ import com.fsd.exp5.service.StudentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.lang.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,7 +32,7 @@ public class StudentController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get a student by ID")
-    public ResponseEntity<Student> getStudentById(@PathVariable Long id) {
+    public ResponseEntity<Student> getStudentById(@PathVariable @NonNull Long id) {
         return service.getStudentById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -39,20 +40,20 @@ public class StudentController {
 
     @PostMapping
     @Operation(summary = "Create a new student")
-    public ResponseEntity<Student> createStudent(@Valid @RequestBody Student student) {
+    public ResponseEntity<Student> createStudent(@Valid @RequestBody @NonNull Student student) {
         Student created = service.createStudent(student);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Update an existing student")
-    public ResponseEntity<Student> updateStudent(@PathVariable Long id, @Valid @RequestBody Student student) {
+    public ResponseEntity<Student> updateStudent(@PathVariable @NonNull Long id, @Valid @RequestBody @NonNull Student student) {
         return ResponseEntity.ok(service.updateStudent(id, student));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a student")
-    public ResponseEntity<Void> deleteStudent(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteStudent(@PathVariable @NonNull Long id) {
         service.deleteStudent(id);
         return ResponseEntity.noContent().build();
     }
