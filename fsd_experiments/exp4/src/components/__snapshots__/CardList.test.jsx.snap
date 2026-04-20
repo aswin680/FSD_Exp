@@ -1,0 +1,60 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`CardList Component Snapshots matches data loaded state snapshot 1`] = `
+<DocumentFragment>
+  <ul
+    data-testid="data-loaded-state"
+  >
+    <li
+      class="card-item"
+    >
+      <h3>
+        Item 1
+      </h3>
+      <p>
+        Desc 1
+      </p>
+    </li>
+    <li
+      class="card-item"
+    >
+      <h3>
+        Item 2
+      </h3>
+      <p>
+        Desc 2
+      </p>
+    </li>
+  </ul>
+</DocumentFragment>
+`;
+
+exports[`CardList Component Snapshots matches empty state snapshot 1`] = `
+<DocumentFragment>
+  <div
+    data-testid="empty-state"
+  >
+    No cards available
+  </div>
+</DocumentFragment>
+`;
+
+exports[`CardList Component Snapshots matches error state snapshot 1`] = `
+<DocumentFragment>
+  <div
+    data-testid="error-state"
+  >
+    Error: Network timeout
+  </div>
+</DocumentFragment>
+`;
+
+exports[`CardList Component Snapshots matches loading state snapshot 1`] = `
+<DocumentFragment>
+  <div
+    data-testid="loading-state"
+  >
+    Loading data...
+  </div>
+</DocumentFragment>
+`;
