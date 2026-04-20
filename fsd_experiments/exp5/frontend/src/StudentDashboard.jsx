@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { User, Mail, BookOpen, Trash2, Edit2, PlusCircle } from 'lucide-react';
 
-const API_URL = 'http://localhost:8080/api/students';
+const API_URL = 'http://localhost:8081/api/students';
 
 const StudentDashboard = () => {
   const [students, setStudents] = useState([]);
@@ -17,7 +17,7 @@ const StudentDashboard = () => {
       setErrorDetails(null);
     } catch (err) {
       console.error(err);
-      setErrorDetails({ _general: "Failed to fetch students. Ensure Spring Boot is running on port 8080." });
+      setErrorDetails({ _general: "Failed to fetch students. Ensure Spring Boot is running on port 8081." });
     }
   };
 
