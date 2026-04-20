@@ -6,6 +6,7 @@ import com.fsd.exp6.repository.RoleRepository;
 import com.fsd.exp6.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -85,7 +86,7 @@ public class UserService {
     // -------------------------------------------------------------------------
 
     @Transactional
-    public User createUser(User user) {
+    public User createUser(@NonNull User user) {
         return userRepository.save(user);
     }
 

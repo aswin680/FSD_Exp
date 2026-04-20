@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.lang.NonNull;
 
 import java.math.BigDecimal;
 
@@ -27,6 +28,7 @@ import java.math.BigDecimal;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@SuppressWarnings("null")
 public class DataInitializer implements CommandLineRunner {
 
     private final RoleRepository    roleRepository;
@@ -153,23 +155,25 @@ public class DataInitializer implements CommandLineRunner {
         log.info("=======================================================");
     }
 
+    @NonNull
     private Role createRole(String name) {
         return roleRepository.findByName(name)
                 .orElseGet(() -> roleRepository.save(
                         Role.builder().name(name).build()));
     }
 
+    @NonNull
     private User createUser(String username, String email, String password) {
-        return userRepository.existsByUsername(username)
-                ? userRepository.findByUsername(username).get()
-                : userRepository.save(
+        return userRepository.findByUsername(username)
+                .orElseGet(() -> userRepository.save(
                         User.builder()
                                 .username(username)
                                 .email(email)
                                 .password(password)
-                                .build());
+                                .build()));
     }
 
+    @NonNull
     private Category createCategory(String name, String desc) {
         return categoryRepository.findByNameIgnoreCase(name)
                 .orElseGet(() -> {
